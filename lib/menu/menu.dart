@@ -1,13 +1,20 @@
+import 'dart:developer' show log;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:project1/controllers/user_controller.dart';
 import 'package:project1/theme_controller.dart';
+import '../controllers/mobile_controler.dart';
+import '../google/login_api.dart' show GoogleSignInService;
+import '../intro_screen.dart' show IntroScreen;
 import 'buy_point.dart';
 import 'privacyploicy.dart';
 import 'shakewin.dart';
 import 'userprofile.dart';
 import 'vipmemeber.dart';
 import 'youtube_tools.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -19,6 +26,8 @@ class MenuPage extends StatefulWidget {
 class _MenuPageState extends State<MenuPage> {
   final ThemeController themeController = Get.find();
   final UserController userController = Get.find();
+  final AuthController authController = Get.find();
+
 
   final List<Map<String, dynamic>> menuItems = [
     {
@@ -70,6 +79,11 @@ class _MenuPageState extends State<MenuPage> {
       "label": "Contact us",
       "icon": Icons.contact_mail,
       "page": () => ContactUsPage()
+    },
+    {
+      "label": "Log Out",
+      "icon": Icons.contact_mail,
+      "page": () => Logout()
     },
   ];
 
@@ -198,8 +212,8 @@ class _MenuPageState extends State<MenuPage> {
                                   maxLines: 1,
                                 ),
                                 Text(
-                                  userController.userEmail.value.isNotEmpty
-                                      ? userController.userEmail.value
+                                  authController.email.value.isNotEmpty
+                                      ? authController.email.value
                                       : "user@example.com",
                                   style: const TextStyle(
                                       fontSize: 13, color: Colors.grey),
@@ -327,5 +341,45 @@ class ContactUsPage extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(title: const Text("Contact Us")),
         body: const Center(child: Text("Contact us page content")));
+  }
+}
+
+
+class Logout extends StatelessWidget {
+  const Logout({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Schedule logout and navigation after build
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await googleSignOut(context); // <-- your sign-out logic here
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const IntroScreen()),
+            (route) => false, // removes all previous routes
+      );
+    });
+
+    // Temporary screen while signing out
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+Future googleSignOut(BuildContext context) async {
+  try {
+    await GoogleSignInService.logout();
+    log('Sign Out Success');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Sign Out Success')));
+    }
+  } catch (exception) {
+    log(exception.toString());
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Sign Out Failed')));
+    }
   }
 }

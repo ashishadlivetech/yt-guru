@@ -33,25 +33,50 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
-    authController.loadMobileNumber(); // Ensure mobile number is loaded first
-    print(
-        "Loaded Mobile Number in initState: ${authController.mobileNumber.value}");
+    authController.getEmail(); // Ensure mobile number is loaded first
+    print("Loaded Mobile Number in initState: ${authController.email.value}");
     _loadCampaigns();
   }
 
+  // Future<void> _loadCampaigns() async {
+  //   try {
+  //     _isLoading.value = true; // ✅ Start loading
+
+  //     //String mobileNumber = authController.mobileNumber.value;
+  //     String email = authController.email.value;
+  //     // print("Fetched Mobile Number: $mobileNumber");
+
+  //     if (email.isEmpty) {
+  //       print("Error: email is empty!");
+  //       return;
+  //     }
+
+  //     var campaigns = await campData.fetchCampaigns(email);
+  //     _campaigns.assignAll(campaigns); // ✅ UI updates immediately
+  //   } catch (e) {
+  //     print("Error loading campaigns: $e");
+  //   } finally {
+  //     _isLoading.value = false; // ✅ End loading
+  //   }
+  // }
   Future<void> _loadCampaigns() async {
     try {
       _isLoading.value = true; // ✅ Start loading
 
-      String mobileNumber = authController.mobileNumber.value;
-      print("Fetched Mobile Number: $mobileNumber");
+      String email = authController.email.value;
 
-      if (mobileNumber.isEmpty) {
-        print("Error: Mobile Number is empty!");
+      if (email.isEmpty) {
+        print("Error: Email is empty!");
         return;
       }
 
-      var campaigns = await campData.fetchCampaigns(mobileNumber);
+      final campaigns = await campData.fetchCampaigns(email);
+      if (campaigns.isEmpty) {
+        print("No campaigns found for email: $email");
+      } else {
+        print("Fetched ${campaigns.length} campaigns.");
+      }
+
       _campaigns.assignAll(campaigns); // ✅ UI updates immediately
     } catch (e) {
       print("Error loading campaigns: $e");
@@ -246,7 +271,7 @@ class _HomepageState extends State<Homepage> {
                 MaterialPageRoute(
                   builder: (context) => CampaignDetailsPage(
                     campaignId: campaign.id.toString(),
-                    mobileNumber: authController.mobileNumber.value,
+                    email: authController.email.value,
                   ),
                 ),
               );

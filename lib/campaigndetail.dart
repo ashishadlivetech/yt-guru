@@ -6,10 +6,10 @@ import 'package:project1/theme_controller.dart';
 
 class CampaignDetailsPage extends StatefulWidget {
   final String campaignId;
-  final String mobileNumber; // Pass the mobile number to the page
+  final String email; // Pass the mobile number to the page
 
   const CampaignDetailsPage(
-      {super.key, required this.campaignId, required this.mobileNumber});
+      {super.key, required this.campaignId, required this.email});
 
   @override
   _CampaignDetailsPageState createState() => _CampaignDetailsPageState();
@@ -29,7 +29,7 @@ class _CampaignDetailsPageState extends State<CampaignDetailsPage> {
   Future<void> fetchCampaignDetails() async {
     try {
       // Fetch campaign list using CampData's fetchCampaigns method
-      var campaigns = await CampData().fetchCampaigns(widget.mobileNumber);
+      var campaigns = await CampData().fetchCampaigns(widget.email);
       // Find the campaign matching the campaignId
       var campaign = campaigns.firstWhere(
           (campaign) => campaign.id.toString() == widget.campaignId,

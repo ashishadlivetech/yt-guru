@@ -10,11 +10,11 @@ class PointsAddservice {
   static Future<void> creditCoins(int points) async {
     final AuthController authController =
         Get.find<AuthController>(); // Get instance of AuthController
-    final String mobileNumber =
-        authController.mobileNumber.value; // Get stored mobile number
-
-    if (mobileNumber.isEmpty) {
-      print("❌ Error: Mobile number is empty");
+    // final String mobileNumber =
+    //     authController.mobileNumber.value; // Get stored mobile number
+    final String email = authController.email.value;
+    if (email.isEmpty) {
+      print("❌ Error:email is empty");
       return;
     }
 
@@ -24,7 +24,8 @@ class PointsAddservice {
     };
     final Map<String, String> body = {
       "method": "credit_coin",
-      "mobile_number": mobileNumber,
+      //"mobile_number": mobileNumber,
+      'email': email,
       "point_to_be_credit": points.toString(),
     };
 

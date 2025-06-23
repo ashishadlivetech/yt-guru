@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,21 +10,21 @@ import 'theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  //await Firebase.initializeApp();
   await GetStorage.init();
   // Initialize storage for theme settings
   Get.put(AuthController());
   Get.put(ThemeController()); // Theme management
   Get.put(UserController());
-  Get.put(OtpService(), permanent: true);
-
+  // Get.put(OtpService(), permanent: true);
   runApp(IntroApp());
 }
 
 class IntroApp extends StatelessWidget {
   final ThemeController themeController = Get.put(ThemeController());
   final UserController userController = Get.find();
-  final OtpService otpService =
-      Get.find<OtpService>(); // Ensure it's registered
+  //final OtpService otpService =
+  //   Get.find<OtpService>(); // Ensure it's registered
 
   @override
   Widget build(BuildContext context) {

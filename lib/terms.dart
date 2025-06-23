@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:project1/GoogleSignInScreen.dart';
 import 'package:project1/login_page.dart';
+import 'package:project1/google/google_page.dart';
 
 class TermsScreen extends StatelessWidget {
   const TermsScreen({super.key});
@@ -46,7 +48,7 @@ class TermsScreen extends StatelessWidget {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => Login()),
+                MaterialPageRoute(builder: (context) => LoginPage()),
               );
             },
             child: Container(

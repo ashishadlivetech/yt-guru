@@ -1,10 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:get/get.dart';
+import 'package:googleapis_auth/auth.dart' show ClientId;
+import 'package:googleapis_auth/auth_io.dart' show clientViaUserConsent;
 import 'package:project1/api_services/videos_services.dart';
 import 'package:project1/button_styles.dart';
 import 'package:project1/theme_controller.dart';
-import 'package:project1/webview_manage.dart'; // Import WebViewPage
+import 'package:project1/webview_manage.dart';
+import 'package:url_launcher/url_launcher.dart' show LaunchMode, launchUrl;
+
+import 'controllers/mobile_controler.dart' show AuthController; // Import WebViewPage
+
+
+const _scopes = [
+  'https://www.googleapis.com/auth/youtube.readonly',
+];
+
+
+var clientId = ClientId(
+  '672682173596-gvmgg10735deljb2jht2c9ckmutn99uf.apps.googleusercontent.com',
+  null,
+);
+
+
+
 
 class Like extends StatefulWidget {
   const Like({super.key});
@@ -21,6 +40,10 @@ class _LikeState extends State<Like> {
   int currentIndex = 0;
   bool isLoading = false;
 
+  final AuthController authController =
+  Get.find();
+
+
   @override
   void initState() {
     super.initState();
@@ -32,10 +55,10 @@ class _LikeState extends State<Like> {
       setState(() => isLoading = true);
 
       List<Map<String, dynamic>> fetchedVideos =
-          await videosServices.fetchVideos('subscribe');
+          await videosServices.fetchVideos('like');
 
       // Filtering out invalid videos
-      List<Map<String, dynamic>> validVideos = fetchedVideos.where((video) {
+     /* List<Map<String, dynamic>> validVideos = fetchedVideos.where((video) {
         return video["url"] != null &&
             video["url"].isNotEmpty &&
             video["thum"] != null &&
@@ -47,7 +70,27 @@ class _LikeState extends State<Like> {
             video["like_time"] != null &&
             video["like_time"].toString().isNotEmpty &&
             video["like_cost"] != null &&
-            video["like_cost"].toString().isNotEmpty;
+            video["like_cost"].toString().isNotEmpty &&
+            video["video_id"] != null &&
+            video["video_id"].isNotEmpty;
+      }).toList();*/
+
+      List<Map<String, dynamic>> validVideos = fetchedVideos.where((video) {
+        return video["url"] != null &&
+            video["url"].isNotEmpty &&
+            video["thum"] != null &&
+            video["thum"].isNotEmpty &&
+            video["view_num_view"] != null &&
+            video["view_num_view"].toString().trim().isNotEmpty &&
+            video["view_num_view"] != "0" &&
+            video["view_time"] != null &&
+            video["view_time"].toString().trim().isNotEmpty &&
+            video["view_time"] != "0" &&
+            video["view_cost"] != null &&
+            video["view_cost"].toString().trim().isNotEmpty &&
+            video["view_cost"] != "0" &&
+            video["video_id"] != null &&
+            video["video_id"].isNotEmpty;;
       }).toList();
 
       if (validVideos.isNotEmpty) {
@@ -65,7 +108,29 @@ class _LikeState extends State<Like> {
     }
   }
 
+  Future<String?> authenticateWithYouTube() async {
+    final id = ClientId(clientId as String, null);
+    final flow = await clientViaUserConsent(id, _scopes, (url) {
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    });
+
+    final token = flow.credentials.accessToken.data;
+    await authController.saveYoutubeAccessToken(token);
+    return token;
+  }
+
+
   void _openWebView() async {
+
+    String? token = await authController.getYoutubeAccessToken();
+    if (token != null) {
+      token = await authenticateWithYouTube();
+      if (token == null) {
+        Get.snackbar("Error", "YouTube login failed");
+        return;
+      }
+    }
+
     if (videos.isNotEmpty && currentIndex < videos.length) {
       bool? isGranted = await FlutterOverlayWindow.isPermissionGranted();
       if (!isGranted) {
@@ -85,11 +150,14 @@ class _LikeState extends State<Like> {
       // Open WebView page inside the overlay
       Get.to(() => WebViewPage(
             videoUrl: videos[currentIndex]['url'] ?? '',
-            videoId: videos[currentIndex]['id'] is int
+            id: videos[currentIndex]['id'] is int
                 ? videos[currentIndex]['id']
                 : int.tryParse(videos[currentIndex]['id'].toString()) ?? 0,
             points: parseValue(videos[currentIndex]['like_num_view']),
             timer: parseValue(videos[currentIndex]['like_time']),
+            videoId: videos[currentIndex]['video_id'] ?? '',
+            accessToken: token.toString(),
+            fromScreen: "Like",
           ));
     }
   }
@@ -153,7 +221,7 @@ class _LikeState extends State<Like> {
                       Image.network(
                         videos[currentIndex]
                             ['thum'], // Fetching the thumbnail from API
-                        width: 200,
+                        width: 300,
                         height: 150,
                         fit: BoxFit.cover,
                       ),

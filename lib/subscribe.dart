@@ -1,10 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:project1/api_services/videos_services.dart';
 import 'package:project1/button_styles.dart';
 import 'package:project1/theme_controller.dart';
 import 'package:project1/webview_manage.dart'; // Import WebViewPage
+import 'package:googleapis_auth/auth_io.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'controllers/mobile_controler.dart' show AuthController;
+
+
+const _scopes = [
+  'https://www.googleapis.com/auth/youtube.readonly',
+];
+
+const storage = FlutterSecureStorage();
+
+var clientId = ClientId(
+  '672682173596-gvmgg10735deljb2jht2c9ckmutn99uf.apps.googleusercontent.com',
+  null,
+);
+
+const youtubeTokenKey = 'youtube_access_token';
+
 
 class Subscribe extends StatefulWidget {
   const Subscribe({super.key});
@@ -20,6 +41,9 @@ class _SubscribeState extends State<Subscribe> {
   List<Map<String, dynamic>> videos = [];
   int currentIndex = 0;
   bool isLoading = false;
+
+  final AuthController authController =
+  Get.find();
 
   @override
   void initState() {
@@ -47,7 +71,9 @@ class _SubscribeState extends State<Subscribe> {
             video["sub_time"] != null &&
             video["sub_time"].toString().isNotEmpty &&
             video["sub_cost"] != null &&
-            video["sub_cost"].toString().isNotEmpty;
+            video["sub_cost"].toString().isNotEmpty &&
+            video["video_id"] != null &&
+            video["video_id"].isNotEmpty;
       }).toList();
 
       if (validVideos.isNotEmpty) {
@@ -65,7 +91,43 @@ class _SubscribeState extends State<Subscribe> {
     }
   }
 
+
+  Future<String?> authenticateWithYouTube() async {
+    final googleSignIn = GoogleSignIn(
+      scopes: [
+        'https://www.googleapis.com/auth/youtube.readonly',
+      ],
+    );
+
+    try {
+      final account = await googleSignIn.signIn();
+      if (account == null) return null; // User cancelled
+
+      final auth = await account.authentication;
+
+      final accessToken = auth.accessToken;
+      if (accessToken != null) {
+        await authController.saveYoutubeAccessToken(accessToken);
+      }
+      return accessToken;
+    } catch (e) {
+      print('Sign in error: $e');
+      return null;
+    }
+  }
+
   void _openWebView() async {
+
+
+    String? token = await authController.getAccessToken();
+    /*if (token == null) {
+      token = await authenticateWithYouTube();
+      if (token == null) {
+        Get.snackbar("Error", "YouTube login failed");
+        return;
+      }
+    }*/
+
     if (videos.isNotEmpty && currentIndex < videos.length) {
       bool? isGranted = await FlutterOverlayWindow.isPermissionGranted();
       if (!isGranted) {
@@ -83,14 +145,22 @@ class _SubscribeState extends State<Subscribe> {
       );
 
       // Open WebView page inside the overlay
-      Get.to(() => WebViewPage(
+      final result = Get.to(() => WebViewPage(
             videoUrl: videos[currentIndex]['url'] ?? '',
-            videoId: videos[currentIndex]['id'] is int
+            id: videos[currentIndex]['id'] is int
                 ? videos[currentIndex]['id']
                 : int.tryParse(videos[currentIndex]['id'].toString()) ?? 0,
             points: parseValue(videos[currentIndex]['sub_num_view']),
             timer: parseValue(videos[currentIndex]['sub_time']),
+            videoId : videos[currentIndex]['video_id'] ?? '',
+            accessToken: token.toString(),
+            fromScreen: "Subscribe",
           ));
+
+      if (result == true) {
+        _fetchVideos(); // Or call setState(() { ... }) if needed
+      }
+
     }
   }
 
@@ -153,7 +223,7 @@ class _SubscribeState extends State<Subscribe> {
                       Image.network(
                         videos[currentIndex]
                             ['thum'], // Fetching the thumbnail from API
-                        width: 200,
+                        width: 300,
                         height: 150,
                         fit: BoxFit.cover,
                       ),

@@ -9,14 +9,19 @@ class VideosServices {
 
   Future<List<Map<String, dynamic>>> fetchVideos(String actionType) async {
     try {
-      String mobileNumber = authController.mobileNumber.value;
-      if (mobileNumber.isEmpty) {
+      //String mobileNumber = authController.mobileNumber.value;
+      final String email = authController.email.value;
+      if (email.isEmpty) {
         throw Exception("Mobile number is missing");
       }
 
       final response = await http.post(
         Uri.parse(baseUrl),
-        body: {'method': 'get_videos', 'mobile_number': mobileNumber},
+        body: {
+          'method': 'get_videos',
+          // 'mobile_number': mobileNumber
+          'email': email
+        },
       );
 
       print("API Response Status: ${response.statusCode}");

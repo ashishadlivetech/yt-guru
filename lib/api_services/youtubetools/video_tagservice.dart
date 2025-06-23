@@ -11,13 +11,14 @@ class VideoTagService {
   static Future<List<String>?> createTag(String url) async {
     try {
       final AuthController authController = Get.find<AuthController>();
-      final String mobileNumber = authController.mobileNumber.value;
-
+      //final String mobileNumber = authController.mobileNumber.value;
+      final String email = authController.email.value;
       final response = await http.post(
         Uri.parse(apiUrl),
         body: {
           'method': 'create_tag',
-          'mobile_number': mobileNumber,
+          // 'mobile_number': mobileNumber,
+          'email': email,
           'url': url,
         },
       );

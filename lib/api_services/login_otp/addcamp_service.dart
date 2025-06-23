@@ -20,9 +20,11 @@ class AddcampService {
     int? likeCost,
   }) async {
     try {
-      String mobileNumber = authController.mobileNumber.value;
-      if (mobileNumber.isEmpty) {
-        return {"success": false, "message": "Mobile number is missing"};
+      // String mobileNumber = authController.mobileNumber.value;
+      String email = authController.email.value;
+
+      if (email.isEmpty) {
+        return {"success": false, "message": "email is missing"};
       }
 
       final response = await http.post(
@@ -30,7 +32,8 @@ class AddcampService {
         headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: {
           "method": "add_campaign",
-          "mobile_number": mobileNumber,
+          // "mobile_number": mobileNumber,
+          "email": email,
           "url": videoUrl,
           if (viewNumView != null) "view_num_view": viewNumView.toString(),
           if (viewTime != null) "view_time": viewTime.toString(),

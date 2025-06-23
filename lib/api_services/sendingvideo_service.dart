@@ -5,7 +5,7 @@ class VideoDetailSend {
 
   /// **Report Video as Watched**
   Future<bool> reportVideoWatched({
-    required String mobileNumber,
+    required String email,
     required String videoId,
     required String points,
   }) async {
@@ -14,7 +14,8 @@ class VideoDetailSend {
         Uri.parse(_baseUrl),
         body: {
           "method": "watched",
-          "mobile_number": mobileNumber,
+          //"mobile_number": mobileNumber
+          'email': email,
           "video_id": videoId,
           "point": points,
         },
