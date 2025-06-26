@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:project1/api_services/sendingvideo_service.dart';
 import 'package:project1/api_services/videos_services.dart';
@@ -75,14 +76,13 @@ class _YouTubePageState extends State<YouTubePage> {
       print("Error fetching view page videos: $e");
       setState(() => isLoading = false);
     }
-  }
-
+  }/*
   Future<void> _loadVideo() async {
     if (videos.isEmpty) return;
 
     String videoUrl = videos[currentVideoIndex]["url"];
-    String? videoId = YoutubePlayer.convertUrlToId(videoUrl);
-
+    //String? videoId = YoutubePlayer.convertUrlToId(videoUrl);
+    String? videoId= videos[currentVideoIndex]["video_id"];
     if (videoId == null) return;
 
     // 🔸 Prompt permission before playing
@@ -114,7 +114,9 @@ class _YouTubePageState extends State<YouTubePage> {
         }
       } else if (value.playerState == PlayerState.paused ||
           value.playerState == PlayerState.ended) {
-        _timer?.cancel();
+        if(countdown==0) {
+          _timer?.cancel();
+        }
       }
     });
 
@@ -125,6 +127,60 @@ class _YouTubePageState extends State<YouTubePage> {
           10;
     });
   }
+*/
+
+
+  Future<void> _loadVideo() async {
+    if (videos.isEmpty) return;
+
+    String videoUrl = videos[currentVideoIndex]["url"];
+    String? videoId = videos[currentVideoIndex]["video_id"];
+    if (videoId == null) return;
+
+    // Check permission
+    bool hasPermission = await _checkOverlayPermission();
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Overlay permission is required to play videos."),
+        ),
+      );
+      return;
+    }
+
+    // Dispose the old controller
+    _youtubeController?.dispose();
+
+    // Recreate the controller with the new video ID
+    _youtubeController = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: YoutubePlayerFlags(
+        autoPlay: isAutoplayEnabled,
+        mute: false,
+        loop: false,
+      ),
+    )..addListener(() {
+      YoutubePlayerValue value = _youtubeController!.value;
+
+      if (value.playerState == PlayerState.playing) {
+        if (_timer == null || !_timer!.isActive) {
+          _startCountdown();
+        }
+      } else if (value.playerState == PlayerState.paused ||
+          value.playerState == PlayerState.ended) {
+        if (countdown == 0) {
+          _timer?.cancel();
+        }
+      }
+    });
+
+    // Update countdown
+    setState(() {
+      countdown = int.tryParse(videos[currentVideoIndex]["view_time"].toString()) ?? 10;
+    });
+  }
+
+
 
 
   Future<bool> _checkOverlayPermission() async {
@@ -153,7 +209,7 @@ class _YouTubePageState extends State<YouTubePage> {
         } else {
           timer.cancel();
           _reportVideoAsWatched();
-          _nextVideo();
+          //_nextVideo();
         }
       });
     }
@@ -166,7 +222,7 @@ class _YouTubePageState extends State<YouTubePage> {
     String videoId = videos[currentVideoIndex]["id"].toString();
     String points = videos[currentVideoIndex]["view_cost"].toString();
 
-    VideoDetailSend videoDetailSend = VideoDetailSend();
+  /*  VideoDetailSend videoDetailSend = VideoDetailSend();
     bool success = await videoDetailSend.reportVideoWatched(
       email: email,
       videoId: videoId,
@@ -179,7 +235,51 @@ class _YouTubePageState extends State<YouTubePage> {
       setState(() {});
     } else {
       print("❌ Failed to report video watch.");
+    }*/
+
+    try {
+      // ✅ Call your backend API after confirming subscription
+      final String email = authController.email.value;
+      final apiResponse = await http.post(
+        Uri.parse('https://indianradio.in/yt-social-api/v1'),
+        /*headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken', // or your auth header
+            },*/
+
+        body: {
+          'method': 'credit_coin_by_event',
+          // 'mobile_number': mobileNumber
+          'email': email,
+          'point_to_be_credit': points.toString(),
+          'action' : 'view',
+          'video_id': videoId
+        },
+
+        /*body: jsonEncode({
+              'channelId': channelId,
+              // Include user ID or other context if needed
+            }),*/
+      );
+
+      if (apiResponse.statusCode == 200) {
+        // Optional: parse response or show success
+        //int newPoints= (int.tryParse(userController.userPoints.value) ?? 0) + widget.points;
+        // userController.updatePoints(newPoints);
+        final userController = Get.find<UserController>();
+        await userController.fetchUserData(
+            forceRefresh: true);
+        setState(() {});
+        _nextVideo();
+        //Navigator.pop(context,true);
+        print("Backend API success: ${apiResponse.body}");
+      } else {
+        print("Backend API failed: ${apiResponse.body}");
+      }
+    } catch (e) {
+      print("Error calling backend API: $e");
     }
+
   }
 
   void _nextVideo() {
@@ -187,10 +287,12 @@ class _YouTubePageState extends State<YouTubePage> {
       _timer?.cancel();
       setState(() {
         currentVideoIndex = (currentVideoIndex + 1) % videos.length;
-        _loadVideo();
       });
+      _loadVideo(); // Call AFTER setState
     }
   }
+
+
 
   @override
   void dispose() {
@@ -240,6 +342,7 @@ class _YouTubePageState extends State<YouTubePage> {
                   ? AspectRatio(
                 aspectRatio: 9 / 7,
                 child: YoutubePlayer(
+                  key: ValueKey(_youtubeController?.initialVideoId), // force re-render
                   controller: _youtubeController!,
                   showVideoProgressIndicator: true,
                 ),
