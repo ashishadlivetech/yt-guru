@@ -1,0 +1,2 @@
+/Users/ezelink/Downloads/project1/android/app/.cxx/Debug/454q41r1/x86_64/CMakeFiles/edit_cache.dir
+/Users/ezelink/Downloads/project1/android/app/.cxx/Debug/454q41r1/x86_64/CMakeFiles/rebuild_cache.dir

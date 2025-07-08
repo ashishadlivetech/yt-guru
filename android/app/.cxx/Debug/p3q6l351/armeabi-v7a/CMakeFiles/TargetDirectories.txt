@@ -1,0 +1,2 @@
+/Users/ezelink/Documents/AndroidProject/project1/android/app/.cxx/Debug/p3q6l351/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/ezelink/Documents/AndroidProject/project1/android/app/.cxx/Debug/p3q6l351/armeabi-v7a/CMakeFiles/rebuild_cache.dir
