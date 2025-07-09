@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project1/menu/buychannelpage.dart';
 import 'package:project1/menu/channel_analysis.dart';
 import 'package:project1/menu/create_desct.dart';
 import 'package:project1/menu/create_tag.dart';
@@ -181,6 +182,13 @@ class YouTubeToolsPage extends StatelessWidget {
                                       MaterialPageRoute(
                                           builder: (context) =>
                                               ChannelAnalysisPage()));
+                                  break;
+                                case 'Buy Channel':
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              BuyChannelsPage()));
                                   break;
                               }
                             },
