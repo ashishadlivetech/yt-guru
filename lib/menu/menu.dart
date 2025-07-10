@@ -7,7 +7,6 @@ import 'package:project1/theme_controller.dart';
 import '../controllers/mobile_controler.dart';
 import '../google/login_api.dart' show GoogleSignInService;
 import '../intro_screen.dart' show IntroScreen;
-import '../play_store_iap.dart' show PlayStoreIAPPage;
 import 'buy_point.dart';
 import 'privacyploicy.dart';
 import 'shakewin.dart';
@@ -34,7 +33,7 @@ class _MenuPageState extends State<MenuPage> {
     {
       "label": "Buy point",
       "icon": Icons.shopping_cart,
-      "page": () => PlayStoreIAPPage()
+      "page": () => BuyPointPage()
     },
     {
       "label": "Become a VIP member",

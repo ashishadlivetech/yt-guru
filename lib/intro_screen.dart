@@ -4,8 +4,6 @@ import 'package:project1/intro_page.dart';
 import 'package:project1/terms.dart';
 import 'package:project1/google/google_page.dart';
 
-import 'google/google_play.dart' show LoginPlayPage;
-
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
 
@@ -66,7 +64,7 @@ class _IntroScreenState extends State<IntroScreen> {
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginPlayPage()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     }
   }
@@ -90,7 +88,7 @@ class _IntroScreenState extends State<IntroScreen> {
                   Future.delayed(Duration(seconds: 2), () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginPlayPage()),
+                      MaterialPageRoute(builder: (context) => LoginPage()),
                     );
                   });
                 }
